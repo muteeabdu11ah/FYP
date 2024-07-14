@@ -1,0 +1,51 @@
+from PIL import Image
+import numpy as np
+
+def load_and_preprocess_image_with_aspect_ratio(img_path, target_size):
+    # Load the image
+    img = Image.open(img_path)
+    
+    # Get original dimensions
+    original_width, original_height = img.size
+    
+    # Calculate aspect ratio
+    aspect_ratio = original_width / original_height
+    
+    # Calculate new dimensions
+    if aspect_ratio > 1:  # Width is greater than height
+        new_width = target_size[0]
+        new_height = int(new_width / aspect_ratio)
+    else:  # Height is greater than or equal to width
+        new_height = target_size[1]
+        new_width = int(new_height * aspect_ratio)
+    
+    # Resize the image
+    img = img.resize((new_width, new_height), Image.ANTIALIAS)
+    
+    # Create a new image with the target size and a black background
+    new_img = Image.new("RGB", target_size, (0, 0, 0))
+    
+    # Paste the resized image onto the new image
+    new_img.paste(img, ((target_size[0] - new_width) // 2, (target_size[1] - new_height) // 2))
+    
+    # Convert the image to a numpy array
+    img_array = np.array(new_img)
+    
+    # Expand dimensions to fit model input
+    img_array = np.expand_dims(img_array, axis=0)
+    
+    return img_array
+
+# Example usage
+img_path = '/kaggle/input/fyp-dataset/non_demented/OAS1_0001_MR1_mpr-1_109.jpg'
+target_size = (128, 128)
+test_image = load_and_preprocess_image_with_aspect_ratio(img_path, target_size)
+print(test_image.shape)  # Should print (1, 128, 128, 3)
+
+# Remove the batch dimension for visualization
+img_to_display = test_image[0]
+
+# Display the image using matplotlib
+plt.imshow(img_to_display)
+plt.axis('off')  # Hide the axis
+plt.show()
